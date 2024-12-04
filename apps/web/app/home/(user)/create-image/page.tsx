@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { Paintbrush, Upload, ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@kit/ui/card";
@@ -39,9 +39,23 @@ function AIImageGenerator() {
   const [customPalette, setCustomPalette] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log({ prompt, artStyle, negativePrompt, colorPalette, aspectRatio, selectedFile });
+    
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate image');
+      const data = await response.json();
+      
+      router.push(`/home/image/show-image?imageUrl=${encodeURIComponent(data.imageUrl)}`);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
