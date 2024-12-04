@@ -100,7 +100,7 @@ function UserHomePage() {
   ];
 
   const handleCreateNew = () => {
-    router.push('/home/(user)/create-image');
+    router.push('/home/create-image');
   };
 
   return (

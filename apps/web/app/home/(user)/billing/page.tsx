@@ -15,7 +15,7 @@ import { requireUserInServerComponent } from '~/lib/server/require-user-in-serve
 
 // local imports
 import { HomeLayoutPageHeader } from '../_components/home-page-header';
-import { createPersonalAccountBillingPortalSession } from '../billing/_lib/server/server-actions';
+import { createPersonalAccountBillingPortalSession } from './_lib/server/server-actions';
 import { PersonalAccountCheckoutForm } from './_components/personal-account-checkout-form';
 import { loadPersonalAccountBillingPageData } from './_lib/server/personal-account-billing-page.loader';
 
