@@ -10,6 +10,7 @@ import {
   FeatureGrid,
   FeatureShowcase,
   FeatureShowcaseIconContainer,
+  GradientSecondaryText,
   Hero,
   Pill,
   SecondaryHero,
@@ -23,40 +24,39 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 function Home() {
   return (
     <div className={'mt-4 flex flex-col space-y-24 py-14'}>
-      <div className={'container mx-auto'}>
-        <Hero
-          pill={
-            <Pill label={'New'}>
-              <span>The leading SaaS Starter Kit for ambitious developers</span>
-            </Pill>
-          }
-          title={
-            <>
-              <span>The ultimate SaaS Starter</span>
-              <span>for your next project</span>
-            </>
-          }
-          subtitle={
-            <span>
-              Build and Ship a SaaS faster than ever before with the next-gen
-              SaaS Starter Kit. Ship your SaaS in days, not months.
-            </span>
-          }
-          cta={<MainCallToActionButton />}
-          image={
-            <Image
-              priority
-              className={
-                'rounded-2xl border border-gray-200 dark:border-primary/10'
-              }
-              width={3558}
-              height={2222}
-              src={`/images/dashboard.webp`}
-              alt={`App Image`}
-            />
-          }
-        />
-      </div>
+      <Hero
+        pill={
+          <Pill label={'New'}>
+            <span>AI-Powered Bilingual Art Education Platform</span>
+          </Pill>
+        }
+        title={
+          <>
+            <span>Transform Your Art Teaching</span>
+            <span>with AI-Powered Innovation</span>
+          </>
+        }
+        subtitle={
+          <span>
+            Break language barriers in art education with Artverse. Create stunning
+            visual content from any language input, powered by our innovative
+            AI technology trained on real art teacher data.
+          </span>
+        }
+        cta={<MainCallToActionButton />}
+        image={
+          <Image
+            priority
+            className={
+              'rounded-2xl border border-gray-200 dark:border-primary/10'
+            }
+            width={3558}
+            height={2222}
+            src={`/images/websiteartverse.png`}
+            alt={`App Image`}
+          />
+        }
+      />
 
       <div className={'container mx-auto'}>
         <div
@@ -66,27 +66,29 @@ function Home() {
             heading={
               <>
                 <b className="font-semibold dark:text-white">
-                  The ultimate SaaS Starter Kit
+                  Transform Art Education with AI
                 </b>
                 .{' '}
-                <span className="font-normal text-muted-foreground">
-                  Unleash your creativity and build your SaaS faster than ever
-                  with Makerkit.
-                </span>
+                <GradientSecondaryText>
+                  Create stunning visual content in any language with our 
+                  AI-powered art education platform.
+                </GradientSecondaryText>
               </>
             }
             icon={
               <FeatureShowcaseIconContainer>
                 <LayoutDashboard className="h-5" />
-                <span>All-in-one solution</span>
+                <span>Complete Teaching Solution</span>
               </FeatureShowcaseIconContainer>
             }
           >
             <FeatureGrid>
               <FeatureCard
-                className={'relative col-span-2 overflow-hidden lg:h-96'}
-                label={'Beautiful Dashboard'}
-                description={`Makerkit provides a beautiful dashboard to manage your SaaS business.`}
+                className={
+                  'relative col-span-2 overflow-hidden bg-violet-500 text-white lg:h-96'
+                }
+                label={'Smart Language Processing'}
+                description={`Input your ideas in any language and let our AI create perfect teaching materials.`}
               >
                 <Image
                   className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border border-border lg:top-36 lg:flex lg:h-auto lg:w-10/12"
@@ -101,8 +103,8 @@ function Home() {
                 className={
                   'relative col-span-2 w-full overflow-hidden lg:col-span-1'
                 }
-                label={'Authentication'}
-                description={`Makerkit provides a variety of providers to allow your users to sign in.`}
+                label={'Professional Art Generation'}
+                description={`Generate high-quality art visuals tailored specifically for education.`}
               >
                 <Image
                   className="absolute left-16 top-32 hidden h-auto w-8/12 rounded-l-2xl lg:flex"
@@ -117,8 +119,8 @@ function Home() {
                 className={
                   'relative col-span-2 overflow-hidden lg:col-span-1 lg:h-96'
                 }
-                label={'Multi Tenancy'}
-                description={`Multi tenant memberships for your SaaS business.`}
+                label={'Classroom Tools'}
+                description={`Everything you need to create and deliver engaging art lessons.`}
               >
                 <Image
                   className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border lg:top-28 lg:flex lg:h-auto lg:w-8/12"
@@ -131,8 +133,8 @@ function Home() {
 
               <FeatureCard
                 className={'relative col-span-2 overflow-hidden lg:h-96'}
-                label={'Billing'}
-                description={`Makerkit supports multiple payment gateways to charge your customers.`}
+                label={'Teaching Resources'}
+                description={`Access our growing library of multilingual art education materials.`}
               >
                 <Image
                   className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border border-border lg:top-36 lg:flex lg:h-auto lg:w-11/12"
@@ -154,7 +156,7 @@ function Home() {
           }
         >
           <SecondaryHero
-            pill={<Pill label="Start for free">No credit card required.</Pill>}
+            pill={<Pill>Get started for free. No credit card required.</Pill>}
             heading="Fair pricing for all types of businesses"
             subheading="Get started on our free plan and upgrade when you are ready."
           />

@@ -92,7 +92,8 @@ function UserHomePage() {
     {
       id: '1',
       title: 'Mountain Landscape',
-      thumbnail: '/path/to/image1.jpg',
+      thumbnail: `/images/mountainlandscape.jpeg`,
+//`/images/mountainlandscape.jpeg`
       createdAt: '2024-03-20',
       tags: ['nature', 'landscape']
     },

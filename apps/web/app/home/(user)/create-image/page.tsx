@@ -38,23 +38,49 @@ function AIImageGenerator() {
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [customPalette, setCustomPalette] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
     
     try {
+      if (!prompt.trim()) {
+        setError('Please enter a prompt description');
+        return;
+      }
+
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt,
+          style: artStyle,
+          negativePrompt,
+          colorPalette: customPalette ? colorPalette : undefined,
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate image');
       const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to generate image');
+        return;
+      }
       
+      if (!data.imageUrl) {
+        setError('No image URL received');
+        return;
+      }
+
       router.push(`/home/image/show-image?imageUrl=${encodeURIComponent(data.imageUrl)}`);
     } catch (error) {
       console.error('Error:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -217,7 +243,26 @@ function AIImageGenerator() {
               )}
             </div>
 
-            <Button type="submit" className="w-full">Generate Image</Button>
+            {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="animate-spin mr-2">⭮</span>
+                  Generating Image...
+                </>
+              ) : (
+                'Generate Image'
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>

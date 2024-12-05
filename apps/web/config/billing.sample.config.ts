@@ -17,34 +17,34 @@ export default createBillingSchema({
   // products configuration
   products: [
     {
-      id: 'starter',
-      name: 'Starter',
-      description: 'The perfect plan to get started',
+      id: 'free',
+      name: 'Free',
+      description: 'Perfect for exploring AI art education',
       currency: 'USD',
-      badge: `Value`,
+      badge: 'Start Creating',
       plans: [
         {
-          name: 'Starter Monthly',
-          id: 'starter-monthly',
+          name: 'Free Monthly',
+          id: 'free-monthly',
           paymentType: 'recurring',
           interval: 'month',
           lineItems: [
             {
               id: 'price_1NNwYHI1i3VnbZTqI2UzaHIe',
-              name: 'Starter',
-              cost: 9.99,
+              name: 'Free',
+              cost: 0,
               type: 'flat' as const,
             },
           ],
         },
         {
-          name: 'Starter Yearly',
-          id: 'starter-yearly',
+          name: 'Free Yearly',
+          id: 'free-yearly',
           paymentType: 'recurring',
           interval: 'year',
           lineItems: [
             {
-              id: 'starter-yearly',
+              id: 'free-yearly',
               name: 'Base',
               cost: 99.99,
               type: 'flat' as const,
@@ -52,19 +52,25 @@ export default createBillingSchema({
           ],
         },
       ],
-      features: ['Feature 1', 'Feature 2', 'Feature 3'],
+      features: [
+        'Basic AI art generation (20/month)',
+        'Bilingual interface (EN/CN)',
+        'Basic lesson templates',
+        'Community art resources',
+        'Standard support'
+      ],
     },
     {
       id: 'pro',
-      name: 'Pro',
-      badge: `Popular`,
+      name: 'Teacher',
+      badge: 'Most Popular',
       highlighted: true,
-      description: 'The perfect plan for professionals',
+      description: 'For dedicated art educators',
       currency: 'USD',
       plans: [
         {
-          name: 'Pro Monthly',
-          id: 'pro-monthly',
+          name: 'Teacher Monthly',
+          id: 'teacher-monthly',
           paymentType: 'recurring',
           interval: 'month',
           lineItems: [
@@ -77,13 +83,13 @@ export default createBillingSchema({
           ],
         },
         {
-          name: 'Pro Yearly',
-          id: 'pro-yearly',
+          name: 'Teacher Yearly',
+          id: 'teacher-yearly',
           paymentType: 'recurring',
           interval: 'year',
           lineItems: [
             {
-              id: 'price_pro_yearly',
+              id: 'price_teacher_yearly',
               name: 'Base',
               cost: 199.99,
               type: 'flat',
@@ -92,27 +98,29 @@ export default createBillingSchema({
         },
       ],
       features: [
-        'Feature 1',
-        'Feature 2',
-        'Feature 3',
-        'Feature 4',
-        'Feature 5',
+        'Unlimited AI art generation',
+        'Priority language processing',
+        'Advanced art editing tools',
+        'Premium lesson templates',
+        'Full resource library access',
+        'Priority support',
+        'Export in multiple formats'
       ],
     },
     {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'The perfect plan for enterprises',
+      id: 'school',
+      name: 'Institution',
+      description: 'For art schools and departments',
       currency: 'USD',
       plans: [
         {
-          name: 'Enterprise Monthly',
-          id: 'enterprise-monthly',
+          name: 'Institution Monthly',
+          id: 'institution-monthly',
           paymentType: 'recurring',
           interval: 'month',
           lineItems: [
             {
-              id: 'price_enterprise-monthly',
+              id: 'price_institution-monthly',
               name: 'Base',
               cost: 29.99,
               type: 'flat',
@@ -120,13 +128,13 @@ export default createBillingSchema({
           ],
         },
         {
-          name: 'Enterprise Yearly',
-          id: 'enterprise-yearly',
+          name: 'Institution Yearly',
+          id: 'institution-yearly',
           paymentType: 'recurring',
           interval: 'year',
           lineItems: [
             {
-              id: 'price_enterprise_yearly',
+              id: 'price_institution_yearly',
               name: 'Base',
               cost: 299.9,
               type: 'flat',
@@ -135,13 +143,14 @@ export default createBillingSchema({
         },
       ],
       features: [
-        'Feature 1',
-        'Feature 2',
-        'Feature 3',
-        'Feature 4',
-        'Feature 5',
-        'Feature 6',
-        'Feature 7',
+        'Everything in Teacher plan',
+        'Multiple teacher accounts',
+        'Department-wide sharing',
+        'Teaching analytics',
+        'Custom branding options',
+        'Dedicated support team',
+        'Staff training sessions',
+        'API integration'
       ],
     },
   ],
