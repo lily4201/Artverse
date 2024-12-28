@@ -261,7 +261,10 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
                 onClick={() => setActiveColorIndex(index)}
               >
                 {index === activeColorIndex && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white"
+                    style={{ pointerEvents: 'none' }}
+                  >
                     Active
                   </div>
                 )}

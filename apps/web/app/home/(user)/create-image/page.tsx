@@ -40,6 +40,7 @@ function AIImageGenerator() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [layer, setLayer] = useState("1");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -241,6 +242,22 @@ function AIImageGenerator() {
                   />
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="layer">Select Layer</Label>
+              <Select value={layer} onValueChange={setLayer}>
+                <SelectTrigger id="layer">
+                  <SelectValue placeholder="Select a layer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3].map((layerNumber) => (
+                    <SelectItem key={layerNumber} value={layerNumber.toString()}>
+                      {layerNumber}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {error && (
