@@ -157,7 +157,7 @@ function Home() {
         >
           <SecondaryHero
             pill={<Pill>Get started for free. No credit card required.</Pill>}
-            heading="Fair pricing for all types of businesses"
+            heading="Fair pricings for all types of businesses"
             subheading="Get started on our free plan and upgrade when you are ready."
           />
 
