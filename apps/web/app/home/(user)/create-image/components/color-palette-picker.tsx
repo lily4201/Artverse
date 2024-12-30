@@ -28,7 +28,7 @@ interface ColorPaletteProps {
   selectedColors: string[];
   onSelectColor: (colors: string[]) => void;
   custom: boolean;
-  onToggleCustom: (custom: boolean) => void;
+  onToggleCustom: (value: boolean) => void;
 }
 
 interface HSV {
@@ -185,7 +185,11 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
     }
   };
 
-  const handlePredefinedPaletteSelect = (palette: string[]) => {
+  const handlePredefinedPaletteSelect = (palette: string[], e?: React.MouseEvent) => {
+    // Prevent any event bubbling/default behavior
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     setHexValues(palette);
     setColors(palette.map(hex => rgb2hsv(hex2rgb(hex))));
     onSelectColor(palette);
@@ -195,6 +199,18 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
     setHexValues(tempHexValues);
     onSelectColor(tempHexValues);
     onToggleCustom(false);
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Prevent form submission
+    const newColors = [...selectedColors];
+    newColors[parseInt(e.target.name)] = e.target.value;
+    onSelectColor(newColors);
+  };
+
+  const handleColorClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
+    // ... rest of your color click handling code
   };
 
   if (custom && colors[activeColorIndex]) {
@@ -255,28 +271,33 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
                 maxLength={7}
               />
               <Button
-                variant="outline"
-                className="w-full h-10"
+                type="button"
+                className={`w-full h-10 relative ${index === activeColorIndex ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                 style={{ backgroundColor: hex }}
                 onClick={() => setActiveColorIndex(index)}
-              >
-                {index === activeColorIndex && (
-                  <div 
-                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white"
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    Active
-                  </div>
-                )}
-              </Button>
+              />
             </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => onToggleCustom(false)} variant="outline" className="flex-1">
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onToggleCustom(false);
+            }} 
+            className="flex-1"
+          >
             Cancel
           </Button>
-          <Button onClick={handleConfirmCustomPalette} variant="default" className="flex-1">
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleConfirmCustomPalette();
+            }}  
+            className="flex-1"
+          >
             Confirm Palette
           </Button>
         </div>
@@ -290,9 +311,9 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
         {predefinedPalettes.map((palette, index) => (
           <Button
             key={index}
-            variant="outline"
+            type="button"
             className={`w-full h-10 p-0 ${hexValues.join(',') === palette.join(',') ? 'ring-2 ring-primary' : ''}`}
-            onClick={() => handlePredefinedPaletteSelect(palette)}
+            onClick={(e) => handlePredefinedPaletteSelect(palette, e)}
           >
             <div className="flex w-full h-full">
               {palette.map((color, colorIndex) => (
@@ -306,7 +327,14 @@ export function ColorPalette({ selectedColors, onSelectColor, custom, onToggleCu
           </Button>
         ))}
       </div>
-      <Button onClick={() => onToggleCustom(true)} variant="outline" className="w-full">
+      <Button 
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          onToggleCustom(true);
+        }} 
+        className="w-full"
+      >
         Create Custom Palette
       </Button>
     </div>

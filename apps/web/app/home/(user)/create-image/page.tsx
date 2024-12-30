@@ -142,6 +142,11 @@ function AIImageGenerator() {
 
   const selectedRatio = aspectRatios.find(ratio => ratio.value === aspectRatio);
 
+  const handleColorPaletteChange = (colors: string[]) => {
+    // Prevent default to ensure no form submission
+    setColorPalette(colors);
+  };
+
   return (
     <div className="p-4">
       <Button className="outline" onClick={() => router.push('/home')}>
@@ -249,7 +254,7 @@ function AIImageGenerator() {
               </div>
               <ColorPalette
                 selectedColors={colorPalette}
-                onSelectColor={setColorPalette}
+                onSelectColor={handleColorPaletteChange}
                 custom={customPalette}
                 onToggleCustom={setCustomPalette}
               />
