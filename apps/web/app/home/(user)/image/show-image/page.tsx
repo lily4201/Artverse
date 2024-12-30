@@ -2,183 +2,130 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+import { Button } from "@kit/ui/button";
+import { useRouter } from 'next/navigation';
 
 export default function ShowImage() {
-  const searchParams = useSearchParams();
-  const imageUrl = searchParams.get('imageUrl');
+  const router = useRouter();
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeTab, setActiveTab] = useState("draw");
-  const [brushSize, setBrushSize] = useState(5);
-  const [brushColor, setBrushColor] = useState("#000000");
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
-  const [brushOpacity, setBrushOpacity] = useState(100);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    // Get the image URL from localStorage
+    const url = localStorage.getItem('generatedImageUrl');
+    if (url) {
+      setImageUrl(url);
+      // Clear it after getting it
+      localStorage.removeItem('generatedImageUrl');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current || !imageUrl) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
+    console.log('Attempting to load image:', imageUrl.substring(0, 100) + '...');
+
     canvas.width = 800;
     canvas.height = 600;
     
-    // Load image
-    if (imageUrl) {
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.src = imageUrl;
-    }
-
-    setContext(ctx);
-  }, [imageUrl]);
-
-  const startDrawing = (e: React.MouseEvent) => {
-    if (!context || activeTab !== "draw") return;
-    setIsDrawing(true);
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const img = new Image();
     
-    context.beginPath();
-    context.moveTo(
-      e.clientX - rect.left,
-      e.clientY - rect.top
-    );
-  };
+    // Only set crossOrigin for non-data URLs
+    if (!imageUrl.startsWith('data:')) {
+      img.crossOrigin = "anonymous";
+    }
+    
+    img.onload = () => {
+      console.log('Image loaded successfully');
+      const imgAspectRatio = img.width / img.height;
+      const canvasAspectRatio = canvas.width / canvas.height;
+      
+      let drawWidth = canvas.width;
+      let drawHeight = canvas.height;
+      let offsetX = 0;
+      let offsetY = 0;
 
-  const draw = (e: React.MouseEvent) => {
-    if (!isDrawing || !context || activeTab !== "draw") return;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+      if (imgAspectRatio > canvasAspectRatio) {
+        drawHeight = canvas.width / imgAspectRatio;
+        offsetY = (canvas.height - drawHeight) / 2;
+      } else {
+        drawWidth = canvas.height * imgAspectRatio;
+        offsetX = (canvas.width - drawWidth) / 2;
+      }
 
-    context.lineWidth = brushSize;
-    context.strokeStyle = brushColor;
-    context.lineTo(
-      e.clientX - rect.left,
-      e.clientY - rect.top
-    );
-    context.stroke();
-  };
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    };
 
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
+    img.onerror = (e) => {
+      console.error("Error loading image:", {
+        urlType: imageUrl.startsWith('data:') ? 'data URL' : 'remote URL',
+        urlLength: imageUrl.length,
+        error: e
+      });
+      setError(`Failed to load image. Please try again.`);
+    };
+
+    img.src = imageUrl;
+
+  }, [imageUrl]);
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
     const link = document.createElement('a');
-    link.download = 'edited-image.png';
-    link.href = canvasRef.current.toDataURL();
+    link.download = 'generated-image.png';
+    link.href = canvasRef.current.toDataURL('image/png');
     link.click();
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
+      <Button 
+        className="mb-4" 
+        onClick={() => router.push('/home/create-image')}
+      >
+        ← Back to Generator
+      </Button>
+
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg">
-            {["Draw", "Shape", "Text", "Select", "Transform", "Filter"].map((tab) => (
-              <button
-                key={tab.toLowerCase()}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-6 py-2 rounded-lg transition-all ${
-                  activeTab === tab.toLowerCase()
-                    ? "bg-white text-black shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Controls */}
-        {activeTab === "draw" && (
-          <div className="mb-6 space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="w-20 font-medium">Size:</span>
-              <div className="flex-1 flex items-center gap-4">
-                <input
-                  type="range"
-                  min="1"
-                  max="50"
-                  value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="w-16 text-gray-600">{brushSize}px</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <span className="w-20 font-medium">Opacity:</span>
-              <div className="flex-1 flex items-center gap-4">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={brushOpacity}
-                  onChange={(e) => setBrushOpacity(Number(e.target.value))}
-                  className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="w-16 text-gray-600">{brushOpacity}%</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <span className="w-20 font-medium">Color:</span>
-              <input
-                type="color"
-                value={brushColor}
-                onChange={(e) => setBrushColor(e.target.value)}
-                className="w-10 h-10 rounded-lg border border-gray-200 p-1 cursor-pointer"
-              />
-            </div>
+        <h2 className="text-2xl font-bold mb-4">Generated Image</h2>
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-500 rounded-lg">
+            {error}
           </div>
         )}
 
         {/* Canvas */}
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden bg-white">
           <canvas
             ref={canvasRef}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            className="w-full h-auto cursor-crosshair"
+            className="w-full h-auto"
+            style={{ maxWidth: '100%' }}
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex items-center gap-3">
-          <button className="px-4 py-2 flex items-center gap-2 bg-white border rounded-lg hover:bg-gray-50">
-            ↩ Undo
-          </button>
-          <button className="px-4 py-2 flex items-center gap-2 bg-white border rounded-lg hover:bg-gray-50">
-            ↪ Redo
-          </button>
-          <button className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50">
-            Clear
-          </button>
-          <button className="px-4 py-2 flex items-center gap-2 bg-white border rounded-lg hover:bg-gray-50">
-            🔍 Zoom In
-          </button>
-          <button className="px-4 py-2 flex items-center gap-2 bg-white border rounded-lg hover:bg-gray-50">
-            🔍 Zoom Out
-          </button>
-          <span className="flex items-center">100%</span>
-          <button
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => router.push('/home/create-image')}
+            >
+              Create Another
+            </Button>
+          </div>
+          <Button
             onClick={handleDownload}
-            className="px-6 py-2 ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600"
+            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600"
           >
-            ⬇ Download
-          </button>
+            Download Image
+          </Button>
         </div>
       </div>
     </div>

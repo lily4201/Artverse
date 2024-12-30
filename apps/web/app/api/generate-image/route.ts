@@ -1,131 +1,185 @@
 import { NextResponse } from 'next/server';
+import Replicate from "replicate";
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
+interface FluxOutput {
+  image: string;
+}
+
+async function streamToBlob(stream: ReadableStream): Promise<Blob> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  
+  return new Blob(chunks, { type: 'image/png' });
+}
 
 export async function POST(request: Request) {
-  // Check API key first
-  const apiKey = process.env.STARRYAI_API_KEY;
-  if (!apiKey) {
-    console.error('StarryAI API key is not configured');
-    return NextResponse.json(
-      { error: 'API configuration error' },
-      { status: 500 }
-    );
-  }
-
   try {
-    const { prompt, style, negativePrompt, colorPalette } = await request.json();
+    const formData = await request.formData();
     
-    if (!prompt?.trim()) {
-      return NextResponse.json(
-        { error: 'Prompt is required' },
-        { status: 400 }
-      );
+    // Log all form data keys
+    console.log('Form data keys:', Array.from(formData.keys()));
+    
+    const prompt = formData.get('prompt') as string;
+    const style = formData.get('style') as string;
+    const negativePrompt = formData.get('negativePrompt') as string;
+    const colorPalette = JSON.parse(formData.get('colorPalette') as string || '[]');
+    const aspectRatio = formData.get('aspectRatio') as string;
+    const referenceImage = formData.get('referenceImage') as File | null;
+    const drawing = formData.get('drawing') as File | null;
+
+    // Validate required fields
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // Construct the enhanced prompt with style and colors
-    const enhancedPrompt = [
-      prompt.trim(),
-      style ? `in ${style} style` : '',
-      colorPalette?.length ? `using the following colors: ${colorPalette.join(', ')}` : ''
-    ].filter(Boolean).join(', ');
-
-    // First request to create the image generation task
-    const createResponse = await fetch('https://api.starryai.com/creations/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey,
-        'accept': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt: enhancedPrompt,
-        negativePrompt: negativePrompt?.trim() || undefined,
-        model: 'lyra',
-        aspectRatio: 'square',
-        highResolution: false,
-        images: 1,
-        steps: 20,
-        initialImageMode: 'color'
-      })
-    });
-
-    // Handle authorization errors specifically
-    if (createResponse.status === 401) {
-      console.error('StarryAI API authorization failed');
-      return NextResponse.json(
-        { error: 'API authorization failed' },
-        { status: 401 }
-      );
+    if (!referenceImage && !drawing) {
+      return NextResponse.json({ error: 'Either a reference image or drawing is required' }, { status: 400 });
     }
 
-    if (!createResponse.ok) {
-      const errorData = await createResponse.json();
-      console.error('StarryAI create error:', errorData);
-      return NextResponse.json(
-        { error: errorData.message || 'Failed to create image generation task' },
-        { status: createResponse.status }
-      );
-    }
+    let output;
 
-    const createData = await createResponse.json();
-    console.log('Creation response:', createData);
+    try {
+      if (drawing) {
+        const drawingBuffer = await drawing.arrayBuffer();
+        const drawingBase64 = Buffer.from(drawingBuffer).toString('base64');
+        const drawingDataUrl = `data:${drawing.type};base64,${drawingBase64}`;
 
-    if (!createData.id) {
-      throw new Error('No creation ID received from StarryAI');
-    }
+        console.log('Sending drawing to model...');
+        
+        output = await replicate.run(
+          "jagilley/controlnet-scribble:435061a1b5a4c1e26740464bf786efdfa9cb3a3ac488595a2de23e143fdb0117",
+          {
+            input: {
+              image: drawingDataUrl,
+              scale: 9,
+              prompt: `${prompt}, ${style ? `in ${style} style` : ''}, ${colorPalette.length > 0 ? `using colors: ${colorPalette.join(', ')}` : ''}`.trim(),
+              a_prompt: "best quality, extremely detailed, professional",
+              n_prompt: "longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
+              ddim_steps: 20,
+              num_samples: "1",
+              image_resolution: "512"
+            }
+          }
+        );
 
-    // Poll for the result
-    let attempts = 0;
-    const maxAttempts = 30;
-    let imageUrl = null;
+        console.log('Drawing model output:', output);
 
-    while (attempts < maxAttempts && !imageUrl) {
-      console.log(`Polling attempt ${attempts + 1}/${maxAttempts}`);
-      
-      const checkResponse = await fetch(`https://api.starryai.com/creations/${createData.id}`, {
-        headers: {
-          'X-API-Key': apiKey,
-          'accept': 'application/json'
+        // Handle the output from the drawing model
+        if (Array.isArray(output) && output.length > 0) {
+          // Check if it's a URL string
+          if (typeof output[0] === 'string' && output[0].startsWith('https://replicate.delivery')) {
+            return NextResponse.json({ 
+              imageUrl: output[0],
+              model: "jagilley/controlnet-scribble"
+            });
+          }
+          // Check if it's a ReadableStream (the generated image should be in output[1])
+          else if (output[1] instanceof ReadableStream) {
+            const blob = await streamToBlob(output[1]); // Use output[1] instead of output[0]
+            const arrayBuffer = await blob.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+            const dataUrl = `data:image/png;base64,${base64}`;
+            
+            return NextResponse.json({ 
+              imageUrl: dataUrl,
+              model: "jagilley/controlnet-scribble"
+            });
+          }
         }
-      });
 
-      if (!checkResponse.ok) {
-        const errorData = await checkResponse.json();
-        console.error('StarryAI fetch error:', errorData);
-        throw new Error(`StarryAI fetch failed: ${errorData.message || checkResponse.statusText}`);
+        throw new Error('Model did not return a valid image output');
+      } else if (referenceImage) {
+        const referenceBuffer = await referenceImage.arrayBuffer();
+        const referenceBase64 = Buffer.from(referenceBuffer).toString('base64');
+        const referenceDataUrl = `data:${referenceImage.type};base64,${referenceBase64}`;
+
+        console.log('Getting image description...');
+        
+        const description = await replicate.run(
+          "yorickvp/llava-v1.6-vicuna-13b:0603dec596080fa084e26f0ae6d605fc5788ed2b1a0358cd25010619487eae63",
+          {
+            input: {
+              image: referenceDataUrl,
+              prompt: "Describe this image in detail",
+              top_p: 1,
+              max_tokens: 1024,
+              temperature: 0.2
+            }
+          }
+        );
+
+        // Handle array of strings or single string description
+        const processedDescription = Array.isArray(description) 
+          ? description.join(' ') 
+          : description;
+
+        if (!processedDescription) {
+          throw new Error('Failed to get image description');
+        }
+
+        console.log('Processed image description:', processedDescription);
+        
+        console.log('Generating image from description...');
+
+        output = await replicate.run(
+          "black-forest-labs/flux-1.1-pro-ultra",
+          {
+            input: {
+              prompt: `${processedDescription}, ${prompt}, ${style ? `in ${style} style` : ''}, ${colorPalette.length > 0 ? `using colors: ${colorPalette.join(', ')}` : ''}`.trim(),
+              negative_prompt: negativePrompt || "",
+              aspect_ratio: aspectRatio || "1:1",
+              image_prompt_strength: 0.1,
+            }
+          }
+        );
+
+        console.log('Reference image model output:', output);
+
+        // Handle different types of output
+        if (output instanceof ReadableStream) {
+          const blob = await streamToBlob(output);
+          const arrayBuffer = await blob.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          const dataUrl = `data:image/png;base64,${base64}`;
+          
+          return NextResponse.json({ 
+            imageUrl: dataUrl,
+            model: "black-forest-labs/flux-1.1-pro-ultra"
+          });
+        } else if (typeof output === 'object' && 'image' in output) {
+          const imageUrl = (output as FluxOutput).image;
+          if (typeof imageUrl === 'string' && imageUrl.startsWith('https://replicate.delivery')) {
+            return NextResponse.json({ 
+              imageUrl,
+              model: "black-forest-labs/flux-1.1-pro-ultra"
+            });
+          }
+        }
       }
 
-      const result = await checkResponse.json();
-      console.log('Poll response:', result);
-      
-      if (result.status === 'completed' && result.images && result.images.length > 0) {
-        imageUrl = result.images[0].url;
-        console.log('Image URL found:', imageUrl);
-        break;
-      } else if (result.status === 'failed') {
-        console.error('Generation failed:', result);
-        throw new Error('Image generation failed');
-      }
+      throw new Error('Model did not return expected output format');
 
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before next attempt
+    } catch (modelError) {
+      console.error('Model error:', modelError);
+      return NextResponse.json({ 
+        error: 'Error running AI model: ' + (modelError instanceof Error ? modelError.message : 'Unknown error')
+      }, { status: 500 });
     }
 
-    if (!imageUrl) {
-      throw new Error('Timeout waiting for image generation');
-    }
-
-    return NextResponse.json({ 
-      imageUrl,
-      message: 'Image generated successfully'
-    });
   } catch (error) {
-    console.error('StarryAI API error:', error);
-    return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Failed to generate image',
-        details: error instanceof Error ? error.stack : undefined
-      },
-      { status: 500 }
-    );
+    console.error('API route error:', error);
+    return NextResponse.json({ 
+      error: 'Server error: ' + (error instanceof Error ? error.message : 'Unknown error')
+    }, { status: 500 });
   }
-} 
+}

@@ -25,7 +25,7 @@ function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button className="outline sm">
           EN
         </Button>
       </DropdownMenuTrigger>
@@ -63,20 +63,20 @@ function ImageCard({ image }: {
         </div>
         <div className="flex flex-wrap gap-1">
           {image.tags.map(tag => (
-            <Badge key={tag} variant="secondary">
+            <Badge key={tag} className="secondary">
               {tag}
             </Badge>
           ))}
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2 p-4">
-        <Button size="sm" variant="ghost">
+        <Button className="sm ghost">
           <Edit className="h-4 w-4" />
         </Button>
-        <Button size="sm" variant="ghost">
+        <Button className="sm ghost">
           <Download className="h-4 w-4" />
         </Button>
-        <Button size="sm" variant="ghost" className="text-destructive">
+        <Button className="sm ghost text-destructive">
           <Trash className="h-4 w-4" />
         </Button>
       </CardFooter>

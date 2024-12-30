@@ -30,7 +30,7 @@ export default function Error({
         <Button onClick={() => router.push('/home')}>
           Go Back Home
         </Button>
-        <Button variant="outline" onClick={reset}>
+        <Button className="outline" onClick={reset}>
           Try Again
         </Button>
       </div>

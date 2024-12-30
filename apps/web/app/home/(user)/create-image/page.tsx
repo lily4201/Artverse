@@ -42,6 +42,20 @@ function AIImageGenerator() {
   const [error, setError] = useState<string | null>(null);
   const [layer, setLayer] = useState("1");
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const getCanvasDataUrl = async (): Promise<string | undefined> => {
+    const canvas = document.querySelector('canvas');
+    return canvas?.toDataURL('image/png');
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -53,30 +67,65 @@ function AIImageGenerator() {
         return;
       }
 
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('style', artStyle);
+      formData.append('negativePrompt', negativePrompt);
+      
+      if (customPalette && colorPalette.length > 0) {
+        formData.append('colorPalette', JSON.stringify(colorPalette));
+      }
+      
+      formData.append('aspectRatio', aspectRatio);
+
+      // Add reference image if selected and in upload mode
+      if (referenceMethod === 'upload' && selectedFile) {
+        formData.append('referenceImage', selectedFile);
+      }
+
+      // Add drawing if in draw mode
+      if (referenceMethod === 'draw') {
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+          // Convert canvas to blob
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+            }, 'image/png');
+          });
+          formData.append('drawing', blob, 'drawing.png');
+        }
+      }
+
+      // Log what we're sending
+      console.log('Sending form data:', {
+        prompt,
+        style: artStyle,
+        negativePrompt,
+        aspectRatio,
+        hasReferenceImage: referenceMethod === 'upload' && !!selectedFile,
+        hasDrawing: referenceMethod === 'draw',
+        method: referenceMethod
+      });
+
       const response = await fetch('/api/generate-image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt,
-          style: artStyle,
-          negativePrompt,
-          colorPalette: customPalette ? colorPalette : undefined,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to generate image');
-        return;
-      }
-      
-      if (!data.imageUrl) {
-        setError('No image URL received');
-        return;
+        throw new Error(data.error || 'Failed to generate image');
       }
 
-      router.push(`/home/image/show-image?imageUrl=${encodeURIComponent(data.imageUrl)}`);
+      if (!data.imageUrl) {
+        throw new Error('No image URL received');
+      }
+
+      localStorage.setItem('generatedImageUrl', data.imageUrl);
+      router.push('/home/image/show-image');
+      
     } catch (error) {
       console.error('Error:', error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
@@ -95,7 +144,7 @@ function AIImageGenerator() {
 
   return (
     <div className="p-4">
-      <Button variant="outline" onClick={() => router.push('/home')}>
+      <Button className="outline" onClick={() => router.push('/home')}>
         Back
       </Button>
       <Card className="w-full max-w-4xl mx-auto mt-4">
@@ -168,7 +217,7 @@ function AIImageGenerator() {
                       onChange={handleFileChange}
                     />
                     <Button
-                      variant="outline"
+                      className="outline"
                       onClick={() => document.getElementById('picture')?.click()}
                     >
                       Choose File
