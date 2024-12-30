@@ -84,6 +84,15 @@ export default function ShowImage() {
     link.click();
   };
 
+  const handleSaveAndNavigate = () => {
+    if (!canvasRef.current) return;
+    const link = document.createElement('a');
+    link.download = 'generated-image.png';
+    link.href = canvasRef.current.toDataURL('image/png');
+    link.click();
+    router.push('/home');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <Button 
@@ -118,6 +127,12 @@ export default function ShowImage() {
               onClick={() => router.push('/home/create-image')}
             >
               Create Another
+            </Button>
+            <Button
+              onClick={handleSaveAndNavigate}
+              className="bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
+            >
+              Save Image
             </Button>
           </div>
           <Button

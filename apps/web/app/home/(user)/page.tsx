@@ -15,6 +15,9 @@ import {
 import { Badge } from '@kit/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@kit/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // local imports
 import { HomeLayoutPageHeader } from './_components/home-page-header';
@@ -42,8 +45,8 @@ function ImageCard({ image }: {
   image: {
     id: string;
     title: string;
-    thumbnail: string;
-    createdAt: string;
+    url: string;
+    created_at: string;
     tags: string[];
   }
 }) {
@@ -51,7 +54,7 @@ function ImageCard({ image }: {
     <Card className="overflow-hidden">
       <CardHeader className="p-0">
         <img 
-          src={image.thumbnail} 
+          src={image.url}
           alt={image.title}
           className="w-full h-48 object-cover"
         />
@@ -59,7 +62,7 @@ function ImageCard({ image }: {
       <CardContent className="p-4">
         <CardTitle className="text-lg mb-2">{image.title}</CardTitle>
         <div className="text-sm text-muted-foreground mb-2">
-          {new Date(image.createdAt).toLocaleDateString()}
+          {new Date(image.created_at).toLocaleDateString()}
         </div>
         <div className="flex flex-wrap gap-1">
           {image.tags.map(tag => (
@@ -84,21 +87,47 @@ function ImageCard({ image }: {
   );
 }
 
+// Add interface for image type
+interface Image {
+  id: string;
+  title: string;
+  url: string;
+  created_at: string;
+  tags: string[];
+  user_id: string;
+}
+
 function UserHomePage() {
   const router = useRouter();
+  const [images, setImages] = useState<Image[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
 
-  // Mock data - replace with actual data fetching
-  const images = [
-    {
-      id: '1',
-      title: 'Mountain Landscape',
-      thumbnail: `/images/mountainlandscape.jpeg`,
-//`/images/mountainlandscape.jpeg`
-      createdAt: '2024-03-20',
-      tags: ['nature', 'landscape']
-    },
-    // Add more mock images...
-  ];
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('images')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setImages(data || []);
+      } catch (error) {
+        console.error('Error fetching images:', error);
+        toast.error('Failed to load images');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchImages();
+  }, [supabase]);
 
   const handleCreateNew = () => {
     router.push('/home/create-image');
