@@ -124,7 +124,8 @@ function AIImageGenerator() {
       }
 
       localStorage.setItem('generatedImageUrl', data.imageUrl);
-      router.push('/home/image/show-image');
+      //router.push(`/home/edit-image?url=${encodeURIComponent(data.imageUrl)}`);
+      router.push(`/home/show-image?url=${encodeURIComponent(data.imageUrl)}`);
       
     } catch (error) {
       console.error('Error:', error);

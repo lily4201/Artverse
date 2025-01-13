@@ -305,5 +305,12 @@
   "bugs": {
     "url": "https://github.com/lily4201/Artverse/issues"
   },
-  "homepage": "https://github.com/lily4201/Artverse#readme"
+  "homepage": "https://github.com/lily4201/Artverse#readme",
+  "dependencies": {
+    "@toast-ui/react-image-editor": "^3.15.2",
+    "@types/file-saver": "^2.0.7",
+    "fabric": "^6.5.4",
+    "file-saver": "^2.0.5",
+    "tui-image-editor": "^3.15.3"
+  }
 }

@@ -1,0 +1,33 @@
+/* Import TOAST UI ImageEditor styles */
+@import 'tui-image-editor/dist/tui-image-editor.css';
+
+/* Custom styles for the editor */
+.tui-image-editor-container {
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff !important;
+}
+
+.tui-image-editor-main {
+  border-radius: 8px;
+  background-color: #fff !important;
+}
+
+.tui-image-editor-header {
+  display: none;
+}
+
+.tui-image-editor {
+  height: 100% !important;
+  background-color: #fff !important;
+}
+
+/* Menu styling */
+.tui-image-editor-menu {
+  background-color: #fff !important;
+}
+
+.tui-image-editor-submenu {
+  background-color: #fff !important;
+}
